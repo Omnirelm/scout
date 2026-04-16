@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "orchestrator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=1.82.0",
+    "openai-agents>=0.0.16",
+    "fastapi>=0.121.1",
+    "pyyaml>=6.0.1",
+    "redis>=5.0.0",
+    "pydantic-settings>=2.0.0",
+    "uvicorn[standard]>=0.32.0",
+    "opentelemetry-api>=1.28.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.28.0",
+    "opentelemetry-instrumentation-fastapi>=0.49b0",
+    "opentelemetry-instrumentation-openai-agents>=0.52.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+orchestrator = "src.main:run"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=0.24.0",
+    "datamodel-code-generator>=0.25.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "integration_github: integration tests that require GITHUB_PAT and real GitHub MCP server (deselect with '-m \"not integration_github\"').",
+]
+filterwarnings = [
+    "ignore::PendingDeprecationWarning:starlette.formparsers",
+]
