@@ -1,4 +1,4 @@
-from src.config.integrations import AppConfig, get_app_config, load_app_config
+from src.config.app_config import AppConfig, get_app_config, load_app_config
 from src.config.settings import Settings, get_settings
 
 __all__ = [

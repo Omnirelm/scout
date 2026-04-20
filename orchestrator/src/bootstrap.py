@@ -8,7 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from src.config.integrations import get_app_config
+from src.config.app_config import get_app_config
 from src.config.settings import get_settings
 from src.core.skills import SkillRegistry, SkillRunner
 from src.core.tools.base import ToolRegistry
