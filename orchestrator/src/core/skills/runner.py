@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from agents import Agent, Runner, RunResult
+from agents.mcp import MCPServerManager
 
 from src.core.base import InvocationCost, extract_runner_cost
 from src.core.skills import (
@@ -18,6 +19,7 @@ from src.core.skills import (
 )
 from src.core.skills.registry import SkillRegistry
 from src.core.tools.base import ToolNotFoundError, ToolRegistry
+from src.core.mcp import McpServerRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +33,12 @@ class SkillRunner:
         self,
         skill_registry: SkillRegistry,
         tool_registry: ToolRegistry,
+        *,
+        mcp_registry: McpServerRegistry | None = None,
     ) -> None:
         self._skill_registry = skill_registry
         self._tool_registry = tool_registry
+        self._mcp_registry = mcp_registry
 
     @property
     def tool_registry(self) -> ToolRegistry:
@@ -102,17 +107,42 @@ class SkillRunner:
             except ToolNotFoundError as e:
                 return SkillResult(success=False, error=str(e))
 
-        agent = Agent(
-            name=skill.name,
-            model=skill.model,
-            instructions=skill.instructions,
-            tools=tools,
-            output_type=None,
+        mcp_instances = (
+            self._mcp_registry.build_servers(skill.mcp_servers)
+            if self._mcp_registry is not None
+            else []
         )
-        result: RunResult = await Runner.run(
-            starting_agent=agent,
-            input=json.dumps(input_payload),
-        )
+        if mcp_instances:
+            async with MCPServerManager(
+                mcp_instances,
+                strict=False,
+                drop_failed_servers=True,
+            ) as mgr:
+                agent = Agent(
+                    name=skill.name,
+                    model=skill.model,
+                    instructions=skill.instructions,
+                    tools=tools,
+                    mcp_servers=mgr.active_servers,
+                    output_type=None,
+                )
+                result: RunResult = await Runner.run(
+                    starting_agent=agent,
+                    input=json.dumps(input_payload),
+                )
+        else:
+            agent = Agent(
+                name=skill.name,
+                model=skill.model,
+                instructions=skill.instructions,
+                tools=tools,
+                mcp_servers=[],
+                output_type=None,
+            )
+            result = await Runner.run(
+                starting_agent=agent,
+                input=json.dumps(input_payload),
+            )
         cost = extract_runner_cost(result, f"simple_skill:{skill.id}")
         return SkillResult(
             success=True,

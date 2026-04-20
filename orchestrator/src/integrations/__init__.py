@@ -9,7 +9,6 @@ from .logs import (
     LogExtractorError,
     LogEntry,
     GrafanaLokiExtractor,
-    LocalFileExtractor,
     OpenSearchExtractor,
 )
 from .traces import (
@@ -30,7 +29,6 @@ __all__ = [
     "LogExtractorError",
     "LogEntry",
     "GrafanaLokiExtractor",
-    "LocalFileExtractor",
     "OpenSearchExtractor",
     # Traces
     "TraceExtractor",

@@ -15,9 +15,9 @@ from .base import (
 )
 from .dedupe import de_dupe_logs
 from .loki import GrafanaLokiExtractor
-from .local_file import LocalFileExtractor
 from .opensearch import OpenSearchExtractor
 from .clickhouse import ClickHouseExtractor
+from .registry import LogSourceSpec
 
 __all__ = [
     'LogExtractor',
@@ -31,7 +31,7 @@ __all__ = [
     'QueryGenerationError',
     'de_dupe_logs',
     'GrafanaLokiExtractor',
-    'LocalFileExtractor',
     'OpenSearchExtractor',
     'ClickHouseExtractor',
+    'LogSourceSpec',
 ]

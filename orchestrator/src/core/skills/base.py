@@ -46,6 +46,7 @@ class SkillDef(BaseModel):
     instructions: str = ""
     kind: Literal["simple", "composed"] = "simple"
     capabilities: list[str] = Field(default_factory=list)
+    mcp_servers: list[str] = Field(default_factory=list)
     steps: list[SkillStep] = Field(default_factory=list)
     model: str = "gpt-4.1"
     input_schema: dict[str, Any] | None = None

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     app_name: str = "orchestrator"
     debug: bool = False
     log_level: str = "INFO"
+    config_file: str = "config.yaml"
     openai_api_key: str | None = Field(
         default=None, validation_alias="OPENAI_API_KEY"
     )
