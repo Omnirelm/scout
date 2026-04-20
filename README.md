@@ -1,6 +1,6 @@
-# Scout Orchestrator
+# Scout
 
-Scout Orchestrator is an AI sidekick for engineering teams that turns open-ended work into coordinated, repeatable execution steps.
+Scout is an AI sidekick for engineering teams that turns open-ended work into coordinated, repeatable execution steps.
 It sits between developer intent and tool execution, so teams can offload ad hoc operational tasks to Scout while keeping outcomes consistent and auditable.
 
 ## Capabilities
