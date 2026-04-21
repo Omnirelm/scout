@@ -1,32 +1,150 @@
 # Scout
 
-Scout is an AI sidekick for engineering teams that turns open-ended work into coordinated, repeatable execution steps.
-It sits between developer intent and tool execution, so teams can offload ad hoc operational tasks to Scout while keeping outcomes consistent and auditable.
+Scout is an agentic platform that takes boring, repetitive engineering work off your team, so humans can keep building what they love.
 
-## Capabilities
+It can investigate incidents by analyzing logs and metrics, execute runbooks, and handle ad-hoc engineering requests such as:
+- "Can you check if we already have a bug on our board for login failures?"
+- "Can you inspect this repo and tell me whether feature flags gate payments?"
 
-- Skill lifecycle APIs to register, update, list, and execute reusable skills.
-- Multi-step task orchestration that can plan, invoke skills/tools, and synthesize results.
-- Built-in day-2 operations fit for incident triage, log analysis, and follow-up automation.
-- Integration-ready runtime for MCP servers and multiple logging backends via `config.yaml`.
-- Execution trace and token-cost visibility for operational observability.
+## Table of Contents
+- [Why Scout](#why-scout)
+- [What Scout Can Do](#what-scout-can-do)
+- [Core Concepts](#core-concepts)
+- [Quick Start](#quick-start)
+- [Example Requests](#example-requests)
+- [Configuration](#configuration)
+- [Project Layout](#project-layout)
+- [Developing Locally](#developing-locally)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Core Building Blocks
+## Why Scout
 
-- `skills`: reusable workflow units defined in YAML (prompt instructions, schemas, model, and optional orchestration steps).
-- `tools`: callable platform capabilities that skills can invoke (for example log query tools from configured logging sources).
-- `mcp_servers`: external capability providers exposed through MCP and attached to skills by name.
+Engineering teams lose time on repetitive operational work:
+- Triaging noisy alerts
+- Correlating logs and metrics across systems
+- Running the same investigation workflows repeatedly
+- Handling "quick checks" across tools like issue trackers and code repos
 
-In practice: a skill can call local tools (`capabilities`) and/or remote MCP tools (`mcp_servers`) in one run.
+Scout turns these tasks into agent workflows with reusable skills and tools, so investigations are faster, more consistent, and easier to scale.
 
-## Add a New Skill
+## What Scout Can Do
 
-You can add skills in two ways:
+- Incident triage using logs, metrics, and structured investigation steps
+- Automated runbook execution for repeatable ops workflows
+- Ad-hoc engineering requests across integrated systems
+- Multi-step orchestration with planning, execution, and synthesis
+- Local tool + MCP server composition in one skill run
 
-- File-based (recommended for versioned defaults): add a YAML file in `skills/defaults/`.
-- Tenant-specific: add a YAML file in `skills/<tenant_id>/`.
+## Core Concepts
 
-Minimal example (`skills/defaults/my_new_skill.yaml`):
+- `skills`: reusable YAML-defined workflows (instructions/schemas/model, and optional steps)
+- `tools` (`capabilities`): local callable functions used by skills
+- `mcp_servers`: remote capability providers attached to skills via MCP
+
+A skill can call both local `capabilities` and remote `mcp_servers` in the same execution.
+
+## Quick Start
+
+### Prerequisites
+- Python `3.11+`
+- [`uv`](https://docs.astral.sh/uv/)
+
+### 1) Install dependencies
+From `orchestrator/`:
+
+```bash
+uv sync
+```
+
+### 2) Configure environment
+Create `orchestrator/.env`:
+
+```bash
+ORCHESTRATOR_DEBUG=true
+OPENAI_API_KEY=<your_openai_api_key>
+```
+
+### 3) Configure integrations
+Update `orchestrator/config.yaml` for your environment (MCP servers, log sources, auth headers, etc.).
+
+### 4) Start the API
+
+```bash
+uv run orchestrator
+```
+
+Dev alternative:
+
+```bash
+uv run uvicorn src.main:app --reload
+```
+
+Server: `http://localhost:8000`
+
+### 5) Verify health
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected response:
+
+```json
+{"status":"ok","service":"orchestrator"}
+```
+
+## Example Requests
+
+Scout orchestration runs through `POST /tasks/run`.
+
+### Example: Repo investigation
+
+```bash
+curl -X POST http://localhost:8000/tasks/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "skill_id": "git_inference",
+    "task": "Check whether this repo has a payments service and whether feature flags control it.",
+    "tenant_id": "default",
+    "context": {},
+    "input": {
+      "repo": "https://github.com/open-telemetry/opentelemetry-demo",
+      "question": "Check whether this repo has a payments service and whether feature flags control it."
+    }
+  }'
+```
+
+### Example: Incident-oriented request
+
+```json
+{
+  "skill_id": "log_analysis",
+  "task": "Investigate repeated login failures in production in the last 30 minutes.",
+  "tenant_id": "default",
+  "context": {
+    "service": "auth-service",
+    "environment": "prod"
+  },
+  "input": {
+    "objective": "Find likely root cause and next action for login failures."
+  }
+}
+```
+
+Notes:
+- `skill_id` lets you force a preferred skill before planner fallback.
+- `input` must satisfy the selected skill's `input_schema`.
+- Output includes synthesized summary, step-level execution details, and token cost metadata.
+
+## Configuration
+
+### Skills
+Add skills in:
+- `orchestrator/skills/defaults/` for versioned default skills
+- `orchestrator/skills/<tenant_id>/` for tenant-specific overrides
+
+Minimal skill example:
 
 ```yaml
 id: my_new_skill
@@ -46,17 +164,8 @@ input_schema:
   required: [objective]
 ```
 
-Notes:
-
-- `kind: simple` requires `instructions`; `kind: composed` requires `steps`.
-- If you omit `id` in file-based skills, the filename stem is used as the skill id.
-- Built-in defaults are read-only via delete API; tenant skills can be created/updated/deleted.
-
-## Add a New MCP Server
-
-MCP servers are configured in `config.yaml` under `integrations.mcp.servers`.
-
-Example `streamable_http` server:
+### MCP servers
+Configure under `orchestrator/config.yaml` in `integrations.mcp.servers`:
 
 ```yaml
 integrations:
@@ -73,7 +182,7 @@ integrations:
         cache_tools_list: true
 ```
 
-To use it in a skill, reference the server by name:
+Attach to a skill:
 
 ```yaml
 mcp_servers:
@@ -81,143 +190,45 @@ mcp_servers:
 ```
 
 Transport requirements:
+- `type: stdio` requires `command` (optional `args` and `env`)
+- `type: sse` and `type: streamable_http` require `url`
 
-- `type: stdio` needs `command` (and optional `args` / `env`).
-- `type: sse` or `type: streamable_http` needs `url`.
+## Project Layout
 
-## Execute Skills
-
-To execute a skill through task orchestration, call `POST /tasks/run`.
-
-Example request:
-
-```json
-{
-  "skill_id": "git_inference",
-  "task": "check if this repo has a service called payments, and if so if its using any feature flags to control features",
-  "tenant_id": "default",
-  "context": {},
-  "input": {
-    "repo": "https://github.com/open-telemetry/opentelemetry-demo",
-    "question": "check if this repo has a service called payments, and if so if its using any feature flags to control features"
-  }
-}
+```text
+scout/
+  README.md
+  orchestrator/
+    config.yaml
+    pyproject.toml
+    skills/
+      defaults/
+      <tenant_id>/
+    src/
+      api/
+      application/
+      config/
+      domain/
+      infrastructure/
 ```
 
-Example `curl`:
+## Developing Locally
 
-```bash
-curl -X POST http://localhost:8000/tasks/run \
-  -H "Content-Type: application/json" \
-  -d '{
-    "skill_id": "git_inference",
-    "task": "check if this repo has a service called payments, and if so if its using any feature flags to control features",
-    "tenant_id": "default",
-    "context": {},
-    "input": {
-      "repo": "https://github.com/open-telemetry/opentelemetry-demo",
-      "question": "check if this repo has a service called payments, and if so if its using any feature flags to control features"
-    }
-  }'
-```
-
-Sample response (shape):
-
-```json
-{
-  "success": true,
-  "summary": "{... synthesized summary JSON as string ...}",
-  "steps_completed": [
-    {
-      "step_id": "plan_step_0",
-      "objective": "Execute preferred skill 'git_inference' before planning.",
-      "success": true,
-      "output": "... evidence-backed analysis ...",
-      "error": null
-    }
-  ],
-  "reasoning": null,
-  "error": null,
-  "cost": {
-    "label": "run_task",
-    "total_tokens": 78108,
-    "children": [
-      {
-        "label": "simple_skill:git_inference",
-        "total_tokens": 75949,
-        "children": []
-      },
-      {
-        "label": "task_synthesizer",
-        "total_tokens": 2159,
-        "children": []
-      }
-    ]
-  }
-}
-```
-
-Notes:
-
-- `skill_id` lets you force a preferred skill first, before any planner fallback.
-- `input` must satisfy the selected skill's `input_schema`.
-- `summary` may be a JSON string if the skill returns structured text output.
-
-
-## Run Locally
-
-### Prerequisites
-
-- Python 3.11+
-- [`uv`](https://docs.astral.sh/uv/)
-
-### 1) Install dependencies
-
-From the `orchestrator` directory:
-
-```bash
-uv sync
-```
-
-### 2) Configure environment
-
-Create a `.env` file in `orchestrator/` (or export env vars in your shell):
-
-```bash
-ORCHESTRATOR_DEBUG=true
-OPENAI_API_KEY=<your_openai_api_key>
-```
-
-You can also edit `config.yaml` to enable and configure integrations (MCP/log sources) for your local setup.
-
-### 3) Start the API
-
-```bash
-uv run orchestrator
-```
-
-Alternative dev command:
-
-```bash
-uv run uvicorn src.main:app --reload
-```
-
-Server runs on `http://localhost:8000`.
-
-### 4) Verify it is up
-
-```bash
-curl http://localhost:8000/health
-```
-
-Expected response shape:
-
-```json
-{"status":"ok","service":"orchestrator"}
-```
-
-### 5) Run tests (optional)
+Run tests from `orchestrator/`:
 
 ```bash
 uv run pytest
 ```
+
+## Contributing
+
+Contributions are welcome. A good first contribution path:
+- Add or improve a skill in `orchestrator/skills/defaults/`
+- Add integration capabilities through MCP server configuration
+- Improve task orchestration behavior or API ergonomics
+
+If you open a PR, include clear reproduction steps and example input/output for behavior changes.
+
+## License
+
+Add a `LICENSE` file at the repository root to define usage and distribution terms.

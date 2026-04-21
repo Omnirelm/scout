@@ -13,7 +13,7 @@ integrations:
     sources:
       # Grafana Loki
       - name: loki-primary
-        enabled: false
+        enabled: true
         flavour: LOKI # LOKI | OPENSEARCH | CLICKHOUSE
         url: http://localhost:3100
         tenantId: "1" # Loki multi-tenant org id (X-Scope-OrgID)
@@ -38,16 +38,16 @@ integrations:
 
       # OpenSearch (PPL)
       - name: opensearch-primary
-        enabled: false
+        enabled: true
         flavour: OPENSEARCH
         url: http://localhost:9200
-        indexPattern: logs-*
+        indexPattern: otel-logs-*
         headers: {}
         auth: null
 
       # ClickHouse (SQL over HTTP)
       - name: clickhouse-primary
-        enabled: false
+        enabled: true
         flavour: CLICKHOUSE
         url: http://localhost:8123
         database: default
