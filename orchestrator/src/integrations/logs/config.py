@@ -60,7 +60,7 @@ class AuthConfig(BaseModel):
 class LogSourceConfig(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
-    name: str
+    name: str | None = None
     enabled: bool = False
     flavour: str
     url: str
@@ -90,4 +90,4 @@ class LogSourceConfig(BaseModel):
 class LoggingConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    sources: list[LogSourceConfig] = Field(default_factory=list)
+    sources: dict[str, LogSourceConfig] = Field(default_factory=dict)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from agents.mcp import MCPServerSse, MCPServerStdio, MCPServerStreamableHttp
@@ -47,7 +47,7 @@ class McpServerConfig(BaseModel):
 class McpConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    servers: list[McpServerConfig] = Field(default_factory=list)
+    servers: dict[str, McpServerConfig] = Field(default_factory=dict)
 
 
 
@@ -55,16 +55,33 @@ class McpConfig(BaseModel):
 class McpServerRegistry:
     """Stores enabled MCP server configs and builds runtime server instances."""
 
-    def __init__(self) -> None:
+    def __init__(self, configs: Mapping[str, McpServerConfig] | None = None) -> None:
         self._registry: dict[str, McpServerConfig] = {}
+        if configs:
+            self.register_many(configs)
 
-    def register(self, config: McpServerConfig) -> None:
+    def register(self, config: McpServerConfig, *, name: str | None = None) -> None:
         """Register or replace a config by normalized name."""
-        name = (config.name or "").strip()
+        normalized_name = (name or config.name or "").strip()
+        if name and (config.name or "").strip() != normalized_name:
+            config = config.model_copy(update={"name": normalized_name})
+        name = normalized_name
         if not name:
             logger.warning("Skipping MCP server registration with empty name")
             return
         self._registry[name] = config
+
+    def register_many(
+        self,
+        configs: Mapping[str, McpServerConfig],
+        *,
+        only_enabled: bool = True,
+    ) -> None:
+        """Register MCP configs from a mapping keyed by server name."""
+        for name, config in configs.items():
+            if only_enabled and not config.enabled:
+                continue
+            self.register(config, name=name)
 
     def get(self, name: str) -> McpServerConfig | None:
         return self._registry.get(name)

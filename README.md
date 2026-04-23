@@ -1,14 +1,14 @@
-# Scout
+# Weave
 
-Scout is an agentic platform that takes boring, repetitive engineering work off your team, so humans can keep building what they love.
+Weave is an agentic platform that takes boring, repetitive engineering work off your team, so humans can keep building what they love.
 
 It can investigate incidents by analyzing logs and metrics, execute runbooks, and handle ad-hoc engineering requests such as:
 - "Can you check if we already have a bug on our board for login failures?"
 - "Can you inspect this repo and tell me whether feature flags gate payments?"
 
 ## Table of Contents
-- [Why Scout](#why-scout)
-- [What Scout Can Do](#what-scout-can-do)
+- [Why Weave](#why-Weave)
+- [What Weave Can Do](#what-Weave-can-do)
 - [Core Concepts](#core-concepts)
 - [Quick Start](#quick-start)
 - [Example Requests](#example-requests)
@@ -18,7 +18,7 @@ It can investigate incidents by analyzing logs and metrics, execute runbooks, an
 - [Contributing](#contributing)
 - [License](#license)
 
-## Why Scout
+## Why Weave
 
 Engineering teams lose time on repetitive operational work:
 - Triaging noisy alerts
@@ -26,9 +26,9 @@ Engineering teams lose time on repetitive operational work:
 - Running the same investigation workflows repeatedly
 - Handling "quick checks" across tools like issue trackers and code repos
 
-Scout turns these tasks into agent workflows with reusable skills and tools, so investigations are faster, more consistent, and easier to scale.
+Weave turns these tasks into agent workflows with reusable skills and tools, so investigations are faster, more consistent, and easier to scale.
 
-## What Scout Can Do
+## What Weave Can Do
 
 - Incident triage using logs, metrics, and structured investigation steps
 - Automated runbook execution for repeatable ops workflows
@@ -96,7 +96,7 @@ Expected response:
 
 ## Example Requests
 
-Scout orchestration runs through `POST /tasks/run`.
+Weave orchestration runs through `POST /tasks/run`.
 
 ### Example: Repo investigation
 
@@ -196,7 +196,7 @@ Transport requirements:
 ## Project Layout
 
 ```text
-scout/
+Weave/
   README.md
   orchestrator/
     config.yaml

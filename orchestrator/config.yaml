@@ -5,85 +5,81 @@
 # (e.g. loki_fetch_logs, opensearch_fetch_logs, clickhouse_fetch_logs).
 # Multiple sources of the same flavour register the same tool ids — the last one wins.
 #
-# MCP: enable stdio or SSE servers; tokens (e.g. GitHub PAT) go in env for stdio servers.
+# Dynaconf is the runtime source of truth for this file.
+# Use ORCHESTRATOR_ env vars to override values (dunder for nesting).
+# Example: ORCHESTRATOR_LOG_LEVEL=DEBUG
+# Example: ORCHESTRATOR_TOOLS__MCP__GITHUB__HEADERS__Authorization="Bearer ghp_xxx"
+#
+# MCP: enable stdio, SSE, or Streamable HTTP servers.
 
-integrations:
-
+tools:
   logging:
-    sources:
-      # Grafana Loki
-      - name: loki-primary
-        enabled: true
-        flavour: LOKI # LOKI | OPENSEARCH | CLICKHOUSE
-        url: http://localhost:3100
-        tenantId: "1" # Loki multi-tenant org id (X-Scope-OrgID)
-        headers: {} # merged with auth headers; auth wins on key collision
-        auth: null
-        # auth:
-        #   apiKey:
-        #     apiKey: ""
-        #     apiKeyHeaderName: X-API-Key
-        #   bearer:
-        #     token: ""
-        #   basic:
-        #     username: ""
-        #     password: ""
-        #   oauth:
-        #     oauthConfig:
-        #       clientId: ""
-        #       clientSecret: ""
-        #       tokenUrl: ""
-        #       scope: null
-        #       tokenExpiryBuffer: 60
+    # Grafana Loki
+    loki-primary:
+      tags: ["logging", default]
+      enabled: true
+      flavour: LOKI # LOKI | OPENSEARCH | CLICKHOUSE
+      url: http://localhost:3100
+      tenantId: "1" # Loki multi-tenant org id (X-Scope-OrgID)
+      headers: {} # merged with auth headers; auth wins on key collision
+      auth: null
+      # auth:
+      #   apiKey:
+      #     apiKey: ""
+      #     apiKeyHeaderName: X-API-Key
+      #   bearer:
+      #     token: ""
+      #   basic:
+      #     username: ""
+      #     password: ""
+      #   oauth:
+      #     oauthConfig:
+      #       clientId: ""
+      #       clientSecret: ""
+      #       tokenUrl: ""
+      #       scope: null
+      #       tokenExpiryBuffer: 60
 
-      # OpenSearch (PPL)
-      - name: opensearch-primary
-        enabled: true
-        flavour: OPENSEARCH
-        url: http://localhost:9200
-        indexPattern: otel-logs-*
-        headers: {}
-        auth: null
+    # OpenSearch (PPL)
+    opensearch-primary:
+      tags: ["logging", default]
+      enabled: true
+      flavour: OPENSEARCH
+      url: http://localhost:9200
+      indexPattern: otel-logs-*
+      headers: {}
+      auth: null
 
-      # ClickHouse (SQL over HTTP)
-      - name: clickhouse-primary
-        enabled: true
-        flavour: CLICKHOUSE
-        url: http://localhost:8123
-        database: default
-        table: otel_logs
-        headers: {}
-        auth: null
+    # ClickHouse (SQL over HTTP)
+    clickhouse-primary:
+      tags: ["logging", default]
+      enabled: true
+      flavour: CLICKHOUSE
+      url: http://localhost:8123
+      database: default
+      table: otel_logs
+      headers: {}
+      auth: null
 
   mcp:
-    servers:
       # GitHub remote MCP server (Streamable HTTP).
       # Set enabled: true and provide a GitHub PAT in the Authorization header.
       # Toolsets served: context, repos, issues, pull_requests, users (default).
       # See https://github.com/github/github-mcp-server for full toolset docs.
-      - name: github
-        enabled: true
-        type: streamable_http # stdio | sse | streamable_http
-        url: https://api.githubcopilot.com/mcp/x/repos/readonly
-        headers:
-          Authorization: "Bearer <YOUR_PAT>"
-        timeout: 15
-        sse_read_timeout: 300
-        cache_tools_list: true # cache list_tools within a single skill run/server session
+    github:
+      enabled: false
+      type: streamable_http # stdio | sse | streamable_http
+      url: https://api.githubcopilot.com/mcp/x/repos/readonly
+      headers:
+        Authorization: ""
+      timeout: 15
+      sse_read_timeout: 300
+      cache_tools_list: true # cache list_tools within a single skill run/server session
 
-      # Example SSE server
-      - name: example-sse
-        enabled: false
-        type: sse
-        url: http://localhost:8080/sse
-        headers: {}
-
-      # Example stdio server (legacy npx-based github server)
-      # - name: github-stdio
-      #   enabled: false
-      #   type: stdio
-      #   command: npx
-      #   args: ["-y", "@modelcontextprotocol/server-github"]
-      #   env:
-      #     GITHUB_PERSONAL_ACCESS_TOKEN: ""
+    # Example SSE server
+    example-sse:
+      enabled: false
+      type: sse
+      url: http://localhost:8080/sse
+      headers: {}
 
