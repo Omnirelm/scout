@@ -1,0 +1,59 @@
+# docker-compose.yml — repo root
+#
+# Usage:
+#   cp orchestrator/.env.example orchestrator/.env   # fill in secrets
+#   docker compose up --build                        # start orchestrator
+#
+# Optional observability stack (Jaeger UI at http://localhost:16686):
+#   docker compose --profile observability up --build
+#
+# When running with the observability profile, set in orchestrator/.env:
+#   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4317
+
+services:
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    image: weave-orchestrator:local
+    env_file:
+      - ./orchestrator/.env
+    environment:
+      # Explicit defaults that must match the container — override via .env if needed
+      REST_PORT: "9999"
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "9999:9999"
+    volumes:
+      # Mount config and skills as read-only so changes take effect without a rebuild.
+      # Remove the volumes block if you prefer fully baked images.
+      - ./orchestrator/config.yaml:/app/config.yaml:ro
+      - ./orchestrator/skills:/app/skills:ro
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request; urllib.request.urlopen('http://localhost:9999/health', timeout=5)"
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # Jaeger — all-in-one trace collector + UI (profile: observability)
+  # Start with: docker compose --profile observability up
+  # Then set OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4317 in .env
+  # ---------------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC receiver
+      - "4318:4318"     # OTLP HTTP receiver
+    restart: unless-stopped
+    profiles:
+      - observability
