@@ -7,8 +7,8 @@ It can investigate incidents by analyzing logs and metrics, execute runbooks, an
 - "Can you inspect this repo and tell me whether feature flags gate payments?"
 
 ## Table of Contents
-- [Why Weave](#why-Weave)
-- [What Weave Can Do](#what-Weave-can-do)
+- [Why Weave](#why-weave)
+- [What Weave Can Do](#what-weave-can-do)
 - [Core Concepts](#core-concepts)
 - [Quick Start](#quick-start)
 - [Example Requests](#example-requests)
