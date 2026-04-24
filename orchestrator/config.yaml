@@ -8,7 +8,7 @@
 # Dynaconf is the runtime source of truth for this file.
 # Use ORCHESTRATOR_ env vars to override values (dunder for nesting).
 # Example: ORCHESTRATOR_LOG_LEVEL=DEBUG
-# Example: ORCHESTRATOR_TOOLS__MCP__GITHUB__HEADERS__Authorization="Bearer ghp_xxx"
+# Example: ORCHESTRATOR_MCP__GITHUB__HEADERS__Authorization="Bearer ghp_xxx"
 #
 # MCP: enable stdio, SSE, or Streamable HTTP servers.
 
@@ -61,25 +61,25 @@ tools:
       headers: {}
       auth: null
 
-  mcp:
-    # GitHub remote MCP server (Streamable HTTP).
-    # Set enabled: true and provide a GitHub PAT in the Authorization header.
-    # Toolsets served: context, repos, issues, pull_requests, users (default).
-    # See https://github.com/github/github-mcp-server for full toolset docs.
-    github:
-      enabled: true
-      type: streamable_http # stdio | sse | streamable_http
-      url: https://api.githubcopilot.com/mcp/x/repos/readonly
-      headers:
-        Authorization: ""
-      timeout: 15
-      sse_read_timeout: 300
-      cache_tools_list: true # cache list_tools within a single skill run/server session
+mcp:
+  # GitHub remote MCP server (Streamable HTTP).
+  # Set enabled: true and provide a GitHub PAT in the Authorization header.
+  # Toolsets served: context, repos, issues, pull_requests, users (default).
+  # See https://github.com/github/github-mcp-server for full toolset docs.
+  github:
+    enabled: true
+    type: streamable_http # stdio | sse | streamable_http
+    url: https://api.githubcopilot.com/mcp/x/repos/readonly
+    headers:
+      Authorization: ""
+    timeout: 15
+    sse_read_timeout: 300
+    cache_tools_list: true # cache list_tools within a single skill run/server session
 
-    # Example SSE server
-    example-sse:
-      enabled: false
-      type: sse
-      url: http://localhost:8080/sse
-      headers: {}
+  # Example SSE server
+  example-sse:
+    enabled: false
+    type: sse
+    url: http://localhost:8080/sse
+    headers: {}
 

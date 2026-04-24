@@ -13,7 +13,6 @@ class ToolsConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     logging: dict[str, LogSourceConfig] = Field(default_factory=dict)
-    mcp: dict[str, McpServerConfig] = Field(default_factory=dict)
 
 
 class OrchestratorConfig(BaseModel):
@@ -25,6 +24,7 @@ class OrchestratorConfig(BaseModel):
     config_file: str = "config.yaml"
     openai_api_key: str | None = None
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
+    mcp: dict[str, McpServerConfig] = Field(default_factory=dict)
 
 
 def _project_root() -> Path:
@@ -61,16 +61,16 @@ def _validate_required_runtime_values(config: OrchestratorConfig) -> None:
             if not source.auth.basic.password:
                 missing.append(f"tools.logging.{source_name}.auth.basic.password")
 
-    for server_name, server in config.tools.mcp.items():
+    for server_name, server in config.mcp.items():
         if not server.enabled:
             continue
         if server.type == "stdio" and not (server.command or "").strip():
-            missing.append(f"tools.mcp.{server_name}.command")
+            missing.append(f"mcp.{server_name}.command")
         if server.type in ("sse", "streamable_http") and not (server.url or "").strip():
-            missing.append(f"tools.mcp.{server_name}.url")
+            missing.append(f"mcp.{server_name}.url")
         auth_header = server.headers.get("Authorization")
         if server.type == "streamable_http" and not (auth_header or "").strip():
-            missing.append(f"tools.mcp.{server_name}.headers.Authorization")
+            missing.append(f"mcp.{server_name}.headers.Authorization")
 
     if missing:
         raise ValueError(
@@ -95,6 +95,7 @@ def load_config(path: str | Path | None = None) -> OrchestratorConfig:
             "openai_api_key", dynasettings.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
         ),
         "tools": dynasettings.get("tools", {}),
+        "mcp": dynasettings.get("mcp", {}),
     }
     config = OrchestratorConfig.model_validate(payload)
     _validate_required_runtime_values(config)

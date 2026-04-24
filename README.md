@@ -80,12 +80,12 @@ Dev alternative:
 uv run uvicorn src.main:app --reload
 ```
 
-Server: `http://localhost:8000`
+Server: `http://localhost:9999`
 
 ### 5) Verify health
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:9999/health
 ```
 
 Expected response:
@@ -101,7 +101,7 @@ Weave orchestration runs through `POST /tasks/run`.
 ### Example: Repo investigation
 
 ```bash
-curl -X POST http://localhost:8000/tasks/run \
+curl -X POST http://localhost:9999/tasks/run \
   -H "Content-Type: application/json" \
   -d '{
     "skill_id": "git_inference",
@@ -165,21 +165,19 @@ input_schema:
 ```
 
 ### MCP servers
-Configure under `orchestrator/config.yaml` in `integrations.mcp.servers`:
+Configure under `orchestrator/config.yaml` in top-level `mcp`:
 
 ```yaml
-integrations:
-  mcp:
-    servers:
-      - name: github
-        enabled: true
-        type: streamable_http
-        url: https://api.githubcopilot.com/mcp/x/repos/readonly
-        headers:
-          Authorization: "Bearer <YOUR_PAT>"
-        timeout: 15
-        sse_read_timeout: 300
-        cache_tools_list: true
+mcp:
+  github:
+    enabled: true
+    type: streamable_http
+    url: https://api.githubcopilot.com/mcp/x/repos/readonly
+    headers:
+      Authorization: "Bearer <YOUR_PAT>"
+    timeout: 15
+    sse_read_timeout: 300
+    cache_tools_list: true
 ```
 
 Attach to a skill:
@@ -196,7 +194,8 @@ Transport requirements:
 ## Project Layout
 
 ```text
-Weave/
+weave/
+  docker-compose.yml
   README.md
   orchestrator/
     config.yaml
@@ -206,10 +205,13 @@ Weave/
       <tenant_id>/
     src/
       api/
-      application/
+      agent_factories/
       config/
+      core/
       domain/
       infrastructure/
+      integrations/
+    tests/
 ```
 
 ## Developing Locally
@@ -222,13 +224,8 @@ uv run pytest
 
 ## Contributing
 
-Contributions are welcome. A good first contribution path:
-- Add or improve a skill in `orchestrator/skills/defaults/`
-- Add integration capabilities through MCP server configuration
-- Improve task orchestration behavior or API ergonomics
-
-If you open a PR, include clear reproduction steps and example input/output for behavior changes.
+Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, coding standards, testing expectations, and the PR checklist.
 
 ## License
 
-Add a `LICENSE` file at the repository root to define usage and distribution terms.
+This repository is licensed under the terms in [`LICENSE`](LICENSE).

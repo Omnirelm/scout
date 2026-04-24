@@ -102,7 +102,7 @@ def wire_application(app: FastAPI) -> None:
                 source.flavour,
             )
 
-    mcp_registry = McpServerRegistry(config.tools.mcp)
+    mcp_registry = McpServerRegistry(config.mcp)
     for name in mcp_registry.names():
         cfg = mcp_registry.get(name)
         if cfg is None:

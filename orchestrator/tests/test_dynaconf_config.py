@@ -20,6 +20,10 @@ def test_config_env_override_and_type_casting(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setenv("ORCHESTRATOR_DEBUG", "true")
     monkeypatch.setenv("ORCHESTRATOR_LOG_LEVEL", "WARNING")
     monkeypatch.setenv("ORCHESTRATOR_OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv(
+        "ORCHESTRATOR_MCP__GITHUB__HEADERS__Authorization",
+        "Bearer test",
+    )
 
     config = get_config()
 
@@ -35,29 +39,28 @@ def test_load_config_supports_nested_env_override(
     _write_config(
         config_path,
         """
-tools:
-  mcp:
-    github:
-      enabled: true
-      type: streamable_http
-      url: https://example.com/mcp
-      headers:
-        Authorization: "Bearer test"
+mcp:
+  github:
+    enabled: true
+    type: streamable_http
+    url: https://example.com/mcp
+    headers:
+      Authorization: "Bearer test"
 """.strip(),
     )
 
     monkeypatch.setenv(
-        "ORCHESTRATOR_TOOLS__MCP__GITHUB__HEADERS__Authorization",
+        "ORCHESTRATOR_MCP__GITHUB__HEADERS__Authorization",
         "Bearer override",
     )
     monkeypatch.setenv(
-        "ORCHESTRATOR_TOOLS__MCP__GITHUB__URL",
+        "ORCHESTRATOR_MCP__GITHUB__URL",
         "https://override.example/mcp",
     )
 
     config = load_config(config_path)
 
-    github = config.tools.mcp["github"]
+    github = config.mcp["github"]
     assert github.url == "https://override.example/mcp"
     assert github.headers["Authorization"] == "Bearer override"
 
@@ -67,13 +70,12 @@ def test_load_config_missing_required_auth_fails(tmp_path: Path) -> None:
     _write_config(
         config_path,
         """
-tools:
-  mcp:
-    github:
-      enabled: true
-      type: streamable_http
-      url: https://example.com/mcp
-      headers: {}
+mcp:
+  github:
+    enabled: true
+    type: streamable_http
+    url: https://example.com/mcp
+    headers: {}
 """.strip(),
     )
 
