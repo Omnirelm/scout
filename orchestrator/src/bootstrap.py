@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 
 from fastapi import FastAPI
 
-from src.config.app_config import get_app_config
-from src.config.settings import get_settings
+from src.config.settings import get_config
 from src.core.skills import SkillRegistry, SkillRunner
 from src.core.tools.base import ToolRegistry
 from src.integrations.http.tool import HttpTool
@@ -69,45 +67,46 @@ def wire_application(app: FastAPI) -> None:
     """
     Build registries and attach them to app.state.
 
-    Called once from ASGI lifespan startup (before traffic). Uses cached get_app_config().
+    Called once from ASGI lifespan startup (before traffic). Uses cached get_config().
     """
-    settings = get_settings()
+    config = get_config()
     logging.basicConfig(
-        level=settings.log_level.upper(),
+        level=config.log_level.upper(),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         force=True,
     )
-    if settings.openai_api_key and not os.getenv("OPENAI_API_KEY"):
-        os.environ["OPENAI_API_KEY"] = settings.openai_api_key
-
-    app_config = get_app_config()
 
     tool_registry = ToolRegistry()
     tool_registry.register(HttpTool())
 
-    for source in app_config.integrations.logging.sources:
+    for source_name, source in config.tools.logging.items():
         if not source.enabled:
             continue
         try:
+            source_for_registry = source
+            if not (source_for_registry.name or "").strip():
+                source_for_registry = source.model_copy(update={"name": source_name})
             extractor = get_log_extractor(
-                source.to_log_source_spec(), default_tenant_id="default"
+                source_for_registry.to_log_source_spec(), default_tenant_id="default"
             )
             _register_log_tools_for_extractor(tool_registry, extractor)
             logger.info(
-                "Registered log tools for source %s (%s)", source.name, source.flavour
+                "Registered log tools for source %s (%s)",
+                source_for_registry.name,
+                source_for_registry.flavour,
             )
         except Exception:
             logger.exception(
                 "Skipping log source %s (%s): initialization failed",
-                source.name,
+                source_name,
                 source.flavour,
             )
 
-    mcp_registry = McpServerRegistry()
-    for cfg in app_config.integrations.mcp.servers:
-        if not cfg.enabled:
+    mcp_registry = McpServerRegistry(config.tools.mcp)
+    for name in mcp_registry.names():
+        cfg = mcp_registry.get(name)
+        if cfg is None:
             continue
-        mcp_registry.register(cfg)
         logger.info("Registered MCP server: %s (%s)", cfg.name, cfg.type)
 
     orchestrator_root = Path(__file__).resolve().parent.parent

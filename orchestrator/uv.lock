@@ -389,6 +389,15 @@ wheels = [
 ]
 
 [[package]]
+name = "dynaconf"
+version = "3.2.13"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/0e/05927cf459e73f8bf9a9277cbea6f2d5b7db8a5cc9dc1e20e7a5fbac1b90/dynaconf-3.2.13.tar.gz", hash = "sha256:d79e0189d97b3f226b8ebb1717e2ce05d1a05cdf6ea05de66d24625fdb5a0cbd", size = 283507, upload-time = "2026-03-17T19:38:47.632Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/97/43/11d6e5d2c00bf000b5329717c74563bf76a9193f4a41cb0c4ef277dde4fa/dynaconf-3.2.13-py2.py3-none-any.whl", hash = "sha256:4305527aef4834bdba3e39479b23c005186e83fb85f65bcaa4bcea58fa26759b", size = 238041, upload-time = "2026-03-17T19:38:45.337Z" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.135.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1073,6 +1082,7 @@ name = "orchestrator"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "dynaconf" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "openai" },
@@ -1082,7 +1092,6 @@ dependencies = [
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-openai-agents" },
     { name = "opentelemetry-sdk" },
-    { name = "pydantic-settings" },
     { name = "pyyaml" },
     { name = "redis" },
     { name = "uvicorn", extra = ["standard"] },
@@ -1098,6 +1107,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "datamodel-code-generator", marker = "extra == 'dev'", specifier = ">=0.25.0" },
+    { name = "dynaconf", specifier = ">=3.2.11" },
     { name = "fastapi", specifier = ">=0.121.1" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "openai", specifier = ">=1.82.0" },
@@ -1107,7 +1117,6 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.49b0" },
     { name = "opentelemetry-instrumentation-openai-agents", specifier = ">=0.52.0" },
     { name = "opentelemetry-sdk", specifier = ">=1.28.0" },
-    { name = "pydantic-settings", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },

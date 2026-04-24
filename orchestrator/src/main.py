@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from src.api.router import api_router
 from src.bootstrap import wire_application
-from src.config.settings import get_settings
+from src.config.settings import get_config
 
 
 @asynccontextmanager
@@ -15,8 +15,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app() -> FastAPI:
-    settings = get_settings()
-    app = FastAPI(title=settings.app_name, lifespan=lifespan)
+    config = get_config()
+    app = FastAPI(title=config.app_name, lifespan=lifespan)
     app.include_router(api_router)
     return app
 
@@ -27,12 +27,12 @@ app = create_app()
 def run() -> None:
     import uvicorn
 
-    settings = get_settings()
+    config = get_config()
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",
         port=8000,
-        reload=settings.debug,
+        reload=config.debug,
     )
 
 

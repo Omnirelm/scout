@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from src.config.settings import Settings, get_settings
+from src.config.settings import OrchestratorConfig, get_config
 
 router = APIRouter()
 
 
 @router.get("/health")
-def health(settings: Settings = Depends(get_settings)) -> dict[str, str]:
-    return {"status": "ok", "service": settings.app_name}
+def health(config: OrchestratorConfig = Depends(get_config)) -> dict[str, str]:
+    return {"status": "ok", "service": config.app_name}
