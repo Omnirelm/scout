@@ -62,10 +62,10 @@ tools:
       auth: null
 
   mcp:
-      # GitHub remote MCP server (Streamable HTTP).
-      # Set enabled: true and provide a GitHub PAT in the Authorization header.
-      # Toolsets served: context, repos, issues, pull_requests, users (default).
-      # See https://github.com/github/github-mcp-server for full toolset docs.
+    # GitHub remote MCP server (Streamable HTTP).
+    # Set enabled: true and provide a GitHub PAT in the Authorization header.
+    # Toolsets served: context, repos, issues, pull_requests, users (default).
+    # See https://github.com/github/github-mcp-server for full toolset docs.
     github:
       enabled: false
       type: streamable_http # stdio | sse | streamable_http
