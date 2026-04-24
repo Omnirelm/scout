@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -31,7 +32,7 @@ def run() -> None:
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=int(os.environ.get("REST_PORT", "9999")),
         reload=config.debug,
     )
 
